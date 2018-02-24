@@ -287,7 +287,7 @@ namespace Game
                     return;
             }
 
-            // Get X or Y coordinate of certain cell
+            // Get X or Y coordinate of certain cell 
             int getCoord(Cell cell, bool isOpposite)
             {
                 return isOpposite ^ (dir == Direction.Left || dir == Direction.Right) ? cell.Y : cell.X;
