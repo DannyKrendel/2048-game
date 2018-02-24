@@ -324,7 +324,7 @@ namespace Game
             int n = dir == Direction.Left || dir == Direction.Up ? 1 : -1;
 
             for (int i = -1; i + 1 < cells.Count(); i++)
-            {
+            { 
                 Cell getCurr() => i >= 0 ? cells[i] : null;
                 Cell getNext() => cells[i + 1];
 
