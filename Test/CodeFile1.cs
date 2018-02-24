@@ -302,7 +302,7 @@ namespace Game
                     cell.X = value;
             }
 
-            // Assigning first value for every enumerated column or row
+            // Assigning first value for every enumerated column or row 
             int border = 0;
             switch (dir)
             {
