@@ -5,125 +5,16 @@ using System.Threading;
 
 namespace Game
 {
-    class Program
-    {
-        static void Main()
-        {
-            Console.CursorVisible = false;
-
-            do
-            {
-                Game game = new Game(4, 8, 2);
-
-                string key;
-                do
-                {
-                    Console.WriteLine("1. New game");
-                    Console.WriteLine("2. Quit");
-                    key = Console.ReadLine();
-                    Console.Clear();
-                } while (key != "1" && key != "2");
-
-                switch (key)
-                {
-                    case "1":
-                        game.Run();
-                        break;
-                    case "2":
-                        Environment.Exit(0);
-                        break;
-                }
-                Console.Clear();
-            } while (true);
-        }
-    }
-
-    public enum Direction
-    {
-        Left,
-        Right,
-        Up,
-        Down
-    }
-
-    class Cell : IEquatable<Cell>, ICloneable
-    {
-        public int Value { get; set; }
-        public int X { get; set; }
-        public int Y { get; set; }
-
-        public Cell(int value, int x, int y)
-        {
-            Value = value;
-            X = x;
-            Y = y;
-        }
-
-        // Double the value
-        public void Double() => Value *= 2;
-
-        // Display value of cell at certain coordinates
-        public void Display()
-        {
-            Console.SetCursorPosition((Y - 1) * 5 + 1, (X - 1) * 2 + 1);
-            ColorChanger.ColorCell(Value.ToString());
-        }
-
-        // Erase value of cell at certain coordinates
-        public void Erase()
-        {
-            Console.SetCursorPosition((Y - 1) * 5 + 1, (X - 1) * 2 + 1);
-            ColorChanger.ColorCell("    ");
-        }
-
-        #region overriding section
-
-        public static bool operator ==(Cell cell1, Cell cell2)
-        {
-            return cell1.Value == cell2.Value && cell1.X == cell2.X && cell1.Y == cell2.Y;
-        }
-
-        public static bool operator !=(Cell cell1, Cell cell2)
-        {
-            return !(cell1.Value == cell2.Value && cell1.X == cell2.X && cell1.Y == cell2.Y);
-        }
-
-        public bool Equals(Cell cell)
-        {
-            if (cell is null)
-                return false;
-
-            return Value == cell.Value && X == cell.X && Y == cell.Y;
-        }
-
-        public override bool Equals(object obj)
-        {
-            Cell cell = obj as Cell;
-            if (obj == null)
-                return false;
-            return Value == cell.Value && X == cell.X && Y == cell.Y;
-        }
-
-        public override int GetHashCode()
-        {
-            return Value.GetHashCode() ^ X.GetHashCode() ^ Y.GetHashCode();
-        }
-
-        public object Clone() => MemberwiseClone();
-
-        #endregion
-    }
-
-    class Game
+    class Game : IGame
     {
         // Length & Width of game field (doesn't have to be equal)
         int length;
         int width;
 
-        int Length
+        public int Length
         {
             get => length;
-            set
+            private set
             {
                 if (value >= 2)
                     length = value;
@@ -131,10 +22,10 @@ namespace Game
                     length = 2;
             }
         }
-        int Width
+        public int Width
         {
             get => width;
-            set
+            private set
             {
                 if (value >= 2)
                     width = value;
@@ -152,51 +43,30 @@ namespace Game
         List<Cell> cells;
         List<Cell> prevCells;
 
-        Random rand = new Random();
+        int InitialCellAmount { get; set; }
+
+        Random random = new Random();
 
         // Initializing the game with field parameters and cell amount at the beginning
         public Game(int length, int width, int initialCellAmount)
         {
-            cells = new List<Cell>();
-            prevCells = new List<Cell>();
             Length = length;
             Width = width;
-            Score = 0;
-            Moves = 0;
-
-            for (int i = 0; i < initialCellAmount; i++)
-                AddCell();
+            InitialCellAmount = initialCellAmount;
+            Initialize();
         }
 
-        // Launching the game
-        public void Run()
+        public void Initialize()
         {
-            DisplayField();
-            DisplayCells();
-            DisplayStats();
+            cells = new List<Cell>();
+            prevCells = new List<Cell>();
 
-            do
-            {
-                if (Console.KeyAvailable)
-                {
-                    HandleKey();
-                    if (IsMoved())
-                        AddCell();
-                    DisplayCells();
-                    DisplayStats();
+            Score = 0;
+            Highscore = 0;
+            Moves = 0;
 
-                    bool isOver = IsOver();
-                    bool isWon = IsWon();
-
-                    if (isOver || isWon)
-                    {
-                        Console.SetCursorPosition(0, 11);
-                        Console.WriteLine(isOver ? "You lost!" : "You won!");
-                        Thread.Sleep(2000);
-                        break;
-                    }
-                }
-            } while (true);
+            for (int i = 0; i < InitialCellAmount; i++)
+                AddCell();
         }
 
         // Checking for any cell on field that moved
@@ -221,13 +91,13 @@ namespace Game
             Cell cell;
             do
             {
-                cell = new Cell(rand.NextDouble() < 0.9 ? 2 : 4, rand.Next(1, Length), rand.Next(1, Width));
+                cell = new Cell(random.NextDouble() < 0.9 ? 2 : 4, random.Next(1, Length + 1), random.Next(1, Width + 1));
             } while (cells.Any(c => c.X == cell.X && c.Y == cell.Y));
             cells.Add(cell);
         }
 
         // Drawing the field
-        void DisplayField()
+        public void DisplayField()
         {
             for (int i = 0; i < Length + 1; i++)
             {
@@ -247,14 +117,14 @@ namespace Game
         }
 
         // Displaying existing cells
-        void DisplayCells()
+        public void DisplayCells()
         {
             foreach (Cell cell in cells)
                 cell.Display();
         }
 
         // Displaying score, highscore and moves
-        void DisplayStats()
+        public void DisplayStats()
         {
             Console.SetCursorPosition(0, 9);
             Console.WriteLine($"Score: {Score}   Highscore: {Highscore}\n" +
@@ -324,7 +194,7 @@ namespace Game
             int n = dir == Direction.Left || dir == Direction.Up ? 1 : -1;
 
             for (int i = -1; i + 1 < cells.Count(); i++)
-            { 
+            {
                 Cell getCurr() => i >= 0 ? cells[i] : null;
                 Cell getNext() => cells[i + 1];
 
@@ -359,10 +229,10 @@ namespace Game
         }
 
         // Choosing movement direction of corresponding key 
-        void HandleKey()
+        public void HandleKey(ConsoleKeyInfo cki)
         {
             prevCells = cells.Select(c => (Cell)c.Clone()).ToList();
-            ConsoleKeyInfo cki = Console.ReadKey(true);
+
             switch (cki.Key)
             {
                 case ConsoleKey.LeftArrow:
@@ -378,6 +248,9 @@ namespace Game
                     MoveCells(Direction.Down);
                     break;
             }
+
+            if (IsMoved())
+                AddCell();
         }
 
         // Checking for field overflow
@@ -387,7 +260,7 @@ namespace Game
         }
 
         // Checking if there is no cell that can be moved
-        bool IsOver()
+        public bool IsOver()
         {
             if (!IsFieldFull())
                 return false;
@@ -417,58 +290,9 @@ namespace Game
         }
 
         // Searching for cell with 2048
-        bool IsWon()
+        public bool IsWon()
         {
             return cells.Any(c => c.Value == 2048);
-        }
-    }
-
-    // Class for changing color for cells
-    static class ColorChanger
-    {
-        // Get color for corresponding value of cell
-        static ConsoleColor GetCellColor(string value)
-        {
-            switch (value)
-            {
-                case "2":
-                    return ConsoleColor.Blue;
-                case "4":
-                    return ConsoleColor.Magenta;
-                case "8":
-                    return ConsoleColor.Cyan;
-                case "16":
-                    return ConsoleColor.Green;
-                case "32":
-                    return ConsoleColor.Yellow;
-                case "64":
-                    return ConsoleColor.DarkBlue;
-                case "128":
-                    return ConsoleColor.DarkMagenta;
-                case "256":
-                    return ConsoleColor.DarkCyan;
-                case "512":
-                    return ConsoleColor.DarkGreen;
-                case "1024":
-                    return ConsoleColor.DarkYellow;
-                default:
-                    return ConsoleColor.Red;
-            }
-        }
-
-        // Color certain cell with optional background color
-        public static void ColorCell(string value, ConsoleColor bgColor = ConsoleColor.Black)
-        {
-            ConsoleColor defaultFg = Console.ForegroundColor;
-            ConsoleColor defaultBg = Console.BackgroundColor;
-
-            Console.ForegroundColor = GetCellColor(value);
-            Console.BackgroundColor = bgColor;
-
-            Console.WriteLine(value);
-
-            Console.ForegroundColor = defaultFg;
-            Console.BackgroundColor = defaultBg;
         }
     }
 }

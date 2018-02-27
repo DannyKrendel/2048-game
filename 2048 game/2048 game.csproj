@@ -6,8 +6,8 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{9F8305DB-729B-4911-A342-49CA47E4D75E}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>Test</RootNamespace>
-    <AssemblyName>Test</AssemblyName>
+    <RootNamespace>2048 game</RootNamespace>
+    <AssemblyName>2048 game</AssemblyName>
     <TargetFrameworkVersion>v4.7</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -36,7 +36,14 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CodeFile1.cs" />
+    <Compile Include="Cell.cs" />
+    <Compile Include="ColorChanger.cs" />
+    <Compile Include="GameLoop.cs" />
+    <Compile Include="Interfaces.cs" />
+    <Compile Include="MainUserInterface.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="Direction.cs" />
+    <Compile Include="Game.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System" />
